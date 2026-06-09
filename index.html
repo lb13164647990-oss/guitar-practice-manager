@@ -9,18 +9,32 @@
   <body>
     <main class="app-shell">
       <section class="topbar" aria-label="概览">
-        <div>
-          <p class="eyebrow">Practice Log</p>
-          <h1>吉他练习管理</h1>
+        <div class="hero-copy">
+          <p class="eyebrow">Practice Like Mark</p>
+          <h1>Dire Straits Practice Journal</h1>
+          <p class="hero-subtitle">记录每一次练习，<br />追踪每一次进步。</p>
+          <a class="hero-action" href="#practiceForm">开始记录</a>
         </div>
-        <div class="fretboard" aria-hidden="true">
-          <span></span>
-          <span></span>
-          <span></span>
-          <span></span>
-          <span></span>
-          <span></span>
+      </section>
+
+      <section class="current-practice" aria-label="当前练习曲目">
+        <div class="section-heading">
+          <p class="panel-kicker">Now Practicing</p>
+          <h2>当前练习曲目</h2>
         </div>
+        <article class="current-card">
+          <div>
+            <h3 id="currentSong">Tunnel of Love</h3>
+            <p id="currentDate">2026-06-09</p>
+          </div>
+          <div class="current-tempo">
+            <strong><span id="currentBpm">95</span> / <span id="currentTargetBpm">120</span> BPM</strong>
+            <div class="current-progress">
+              <span id="currentProgressBar" style="width: 70%"></span>
+            </div>
+            <p id="currentProgressText">完成度 70%</p>
+          </div>
+        </article>
       </section>
 
       <section class="summary-grid" aria-label="练习统计">
@@ -40,11 +54,47 @@
           <span>最近练习</span>
           <strong id="latestDate">--</strong>
         </article>
+        <article>
+          <span>累计时长</span>
+          <strong id="totalDuration">0 分钟</strong>
+        </article>
+        <article>
+          <span>连续打卡</span>
+          <strong id="streakDays">0 天</strong>
+        </article>
       </section>
 
       <section class="workspace">
         <form class="entry-form" id="practiceForm">
           <input type="hidden" id="entryId" />
+
+          <div class="preset-library" aria-label="Dire Straits 预置曲库">
+            <div>
+              <p class="panel-kicker">Dire Straits</p>
+              <h2>预置曲库</h2>
+            </div>
+          </div>
+
+          <div class="song-presets" aria-label="Dire Straits 预置曲库">
+            <button type="button" data-song="Tunnel of Love">Tunnel of Love</button>
+            <button type="button" data-song="Lady Writer">Lady Writer</button>
+            <button type="button" data-song="Sultans of Swing">Sultans of Swing</button>
+            <button type="button" data-song="Down to the Waterline">Down to the Waterline</button>
+            <button type="button" data-song="Water of Love">Water of Love</button>
+            <button type="button" data-song="Six Blade Knife">Six Blade Knife</button>
+            <button type="button" data-song="Once Upon a Time in the West">Once Upon a Time in the West</button>
+            <button type="button" data-song="Single-Handed Sailor">Single-Handed Sailor</button>
+            <button type="button" data-song="Romeo and Juliet">Romeo and Juliet</button>
+            <button type="button" data-song="Skateaway">Skateaway</button>
+            <button type="button" data-song="Expresso Love">Expresso Love</button>
+            <button type="button" data-song="Telegraph Road">Telegraph Road</button>
+            <button type="button" data-song="Private Investigations">Private Investigations</button>
+            <button type="button" data-song="Industrial Disease">Industrial Disease</button>
+            <button type="button" data-song="Money for Nothing">Money for Nothing</button>
+            <button type="button" data-song="Walk of Life">Walk of Life</button>
+            <button type="button" data-song="So Far Away">So Far Away</button>
+            <button type="button" data-song="Brothers in Arms">Brothers in Arms</button>
+          </div>
 
           <label>
             曲目
@@ -63,6 +113,11 @@
           </div>
 
           <label>
+            练习时长
+            <input id="durationInput" name="duration" type="number" required min="1" max="480" value="30" />
+          </label>
+
+          <label>
             完成度
             <div class="range-line">
               <input id="progressInput" name="progress" type="range" min="0" max="100" step="5" value="50" />
@@ -77,6 +132,10 @@
         </form>
 
         <section class="records-panel" aria-label="练习记录">
+          <div class="records-heading">
+            <p class="panel-kicker">History</p>
+            <h2>练习历史</h2>
+          </div>
           <div class="panel-tools">
             <label class="search-box">
               <span>搜索</span>
@@ -89,6 +148,7 @@
                 <option value="dateAsc">日期旧到新</option>
                 <option value="progressDesc">完成度高到低</option>
                 <option value="bpmDesc">BPM 高到低</option>
+                <option value="durationDesc">时长高到低</option>
               </select>
             </label>
           </div>
@@ -100,6 +160,7 @@
                   <th>曲目</th>
                   <th>BPM</th>
                   <th>完成度</th>
+                  <th>时长</th>
                   <th>日期</th>
                   <th>操作</th>
                 </tr>
@@ -109,6 +170,58 @@
             <p class="empty-state" id="emptyState">还没有练习记录</p>
           </div>
         </section>
+      </section>
+
+      <section class="analytics-grid" aria-label="练习趋势">
+        <article class="chart-panel">
+          <div>
+            <p class="panel-kicker">Tempo</p>
+            <h2>BPM 成长曲线</h2>
+          </div>
+          <canvas id="bpmChart" width="640" height="280" aria-label="BPM 成长曲线"></canvas>
+          <p class="chart-empty" id="bpmChartEmpty">添加练习记录后显示 BPM 曲线</p>
+        </article>
+
+        <article class="chart-panel">
+          <div>
+            <p class="panel-kicker">Duration</p>
+            <h2>练习时长统计图</h2>
+          </div>
+          <canvas id="durationChart" width="640" height="280" aria-label="练习时长统计图"></canvas>
+          <p class="chart-empty" id="durationChartEmpty">添加练习时长后显示每日统计</p>
+        </article>
+      </section>
+
+      <section class="gp-panel" aria-label="Guitar Pro 文件链接管理">
+        <div class="panel-heading">
+          <div>
+            <p class="panel-kicker">Files</p>
+            <h2>Guitar Pro 文件链接管理</h2>
+          </div>
+        </div>
+
+        <form class="gp-form" id="gpForm">
+          <input type="hidden" id="gpId" />
+          <label>
+            曲目
+            <input id="gpSongInput" type="text" required maxlength="80" placeholder="例如：Tunnel of Love" />
+          </label>
+          <label>
+            文件名称
+            <input id="gpNameInput" type="text" required maxlength="80" placeholder="例如：主音练习.gp5" />
+          </label>
+          <label>
+            文件链接
+            <input id="gpUrlInput" type="text" inputmode="url" required placeholder="https:// 或 file:// 链接" />
+          </label>
+          <div class="form-actions">
+            <button class="primary" type="submit" id="gpSubmitButton">保存链接</button>
+            <button type="button" id="gpCancelButton" hidden>取消编辑</button>
+          </div>
+        </form>
+
+        <div class="gp-list" id="gpList"></div>
+        <p class="empty-state" id="gpEmptyState">还没有 Guitar Pro 文件链接</p>
       </section>
     </main>
 
