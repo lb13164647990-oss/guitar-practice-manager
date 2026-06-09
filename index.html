@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>吉他练习管理</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="topbar" aria-label="概览">
+        <div>
+          <p class="eyebrow">Practice Log</p>
+          <h1>吉他练习管理</h1>
+        </div>
+        <div class="fretboard" aria-hidden="true">
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </section>
+
+      <section class="summary-grid" aria-label="练习统计">
+        <article>
+          <span>总次数</span>
+          <strong id="totalCount">0</strong>
+        </article>
+        <article>
+          <span>平均 BPM</span>
+          <strong id="averageBpm">0</strong>
+        </article>
+        <article>
+          <span>平均完成度</span>
+          <strong id="averageProgress">0%</strong>
+        </article>
+        <article>
+          <span>最近练习</span>
+          <strong id="latestDate">--</strong>
+        </article>
+      </section>
+
+      <section class="workspace">
+        <form class="entry-form" id="practiceForm">
+          <input type="hidden" id="entryId" />
+
+          <label>
+            曲目
+            <input id="songInput" name="song" type="text" required maxlength="80" placeholder="例如：天空之城" />
+          </label>
+
+          <div class="field-row">
+            <label>
+              BPM
+              <input id="bpmInput" name="bpm" type="number" required min="20" max="260" value="80" />
+            </label>
+            <label>
+              练习日期
+              <input id="dateInput" name="date" type="date" required />
+            </label>
+          </div>
+
+          <label>
+            完成度
+            <div class="range-line">
+              <input id="progressInput" name="progress" type="range" min="0" max="100" step="5" value="50" />
+              <output id="progressOutput" for="progressInput">50%</output>
+            </div>
+          </label>
+
+          <div class="form-actions">
+            <button class="primary" type="submit" id="submitButton">保存记录</button>
+            <button type="button" id="cancelEditButton" hidden>取消编辑</button>
+          </div>
+        </form>
+
+        <section class="records-panel" aria-label="练习记录">
+          <div class="panel-tools">
+            <label class="search-box">
+              <span>搜索</span>
+              <input id="searchInput" type="search" placeholder="曲目名称" />
+            </label>
+            <label class="sort-box">
+              <span>排序</span>
+              <select id="sortSelect">
+                <option value="dateDesc">日期新到旧</option>
+                <option value="dateAsc">日期旧到新</option>
+                <option value="progressDesc">完成度高到低</option>
+                <option value="bpmDesc">BPM 高到低</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>曲目</th>
+                  <th>BPM</th>
+                  <th>完成度</th>
+                  <th>日期</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="recordsBody"></tbody>
+            </table>
+            <p class="empty-state" id="emptyState">还没有练习记录</p>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
