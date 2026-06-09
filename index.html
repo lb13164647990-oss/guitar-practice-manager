@@ -59,6 +59,10 @@
           <strong id="totalDuration">0 分钟</strong>
         </article>
         <article>
+          <span>本周时长</span>
+          <strong id="weeklyDuration">0 分钟</strong>
+        </article>
+        <article>
           <span>连续打卡</span>
           <strong id="streakDays">0 天</strong>
         </article>
@@ -94,6 +98,32 @@
             <button type="button" data-song="Walk of Life">Walk of Life</button>
             <button type="button" data-song="So Far Away">So Far Away</button>
             <button type="button" data-song="Brothers in Arms">Brothers in Arms</button>
+          </div>
+
+          <div class="song-library" aria-label="曲库管理">
+            <div class="panel-heading">
+              <p class="panel-kicker">Library</p>
+              <h2>曲库管理</h2>
+            </div>
+
+            <form id="songLibraryForm" class="song-library-form">
+              <input type="hidden" id="songId" />
+              <label>
+                曲目
+                <input id="songNameInput" type="text" maxlength="80" placeholder="曲目名称" required />
+              </label>
+              <label>
+                目标 BPM
+                <input id="songBpmInput" type="number" min="20" max="260" value="120" />
+              </label>
+              <div class="form-actions">
+                <button class="primary" id="songSaveButton" type="submit">保存曲目</button>
+                <button type="button" id="songCancelButton" hidden>取消</button>
+              </div>
+            </form>
+
+            <div class="song-library-list" id="songLibraryList"></div>
+            <p class="empty-state" id="songLibraryEmpty">还没有自定义曲目</p>
           </div>
 
           <label>

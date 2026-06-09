@@ -1,5 +1,6 @@
 const STORAGE_KEY = "guitar-practice-records";
 const GP_STORAGE_KEY = "guitar-pro-links";
+const SONGS_STORAGE_KEY = "guitar-song-library";
 const DIRE_STRAITS_SONGS = [
   "Tunnel of Love",
   "Lady Writer",
@@ -78,8 +79,19 @@ const gpCancelButton = document.querySelector("#gpCancelButton");
 const gpList = document.querySelector("#gpList");
 const gpEmptyState = document.querySelector("#gpEmptyState");
 
+// Song library elements
+const songLibraryForm = document.querySelector("#songLibraryForm");
+const songId = document.querySelector("#songId");
+const songNameInput = document.querySelector("#songNameInput");
+const songBpmInput = document.querySelector("#songBpmInput");
+const songSaveButton = document.querySelector("#songSaveButton");
+const songCancelButton = document.querySelector("#songCancelButton");
+const songLibraryList = document.querySelector("#songLibraryList");
+const songLibraryEmpty = document.querySelector("#songLibraryEmpty");
+
 let records = migrateRecords(loadItems(STORAGE_KEY));
 let gpLinks = loadItems(GP_STORAGE_KEY);
+let songLibrary = loadItems(SONGS_STORAGE_KEY);
 
 function createId() {
   if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
@@ -209,6 +221,10 @@ function renderSummary() {
   totalCount.textContent = records.length;
   totalDuration.textContent = formatMinutes(minutes);
   streakDays.textContent = `${calculateStreak()} 天`;
+  // 本周时长统计（过去 7 天，包括今天）
+  const weeklyMinutes = calculateWeeklyMinutes();
+  const weeklyEl = document.querySelector("#weeklyDuration");
+  if (weeklyEl) weeklyEl.textContent = formatMinutes(weeklyMinutes);
 
   if (records.length === 0) {
     averageBpm.textContent = "0";
@@ -224,6 +240,101 @@ function renderSummary() {
   averageBpm.textContent = Math.round(bpmTotal / records.length);
   averageProgress.textContent = `${Math.round(progressTotal / records.length)}%`;
   latestDate.textContent = formatDate(latest);
+}
+
+function calculateWeeklyMinutes() {
+  if (records.length === 0) return 0;
+  const todayStr = today();
+  const todayDate = new Date(`${todayStr}T00:00:00`);
+  const sevenDays = new Set();
+  for (let i = 0; i < 7; i += 1) {
+    const d = new Date(todayDate);
+    d.setDate(d.getDate() - i);
+    sevenDays.add(d.toISOString().slice(0, 10));
+  }
+  return records.reduce((sum, record) => (sevenDays.has(record.date) ? sum + record.duration : sum), 0);
+}
+
+// Song library rendering and management
+function renderSongLibrary() {
+  songLibraryList.innerHTML = "";
+  songLibraryEmpty.hidden = songLibrary.length > 0;
+  for (const song of songLibrary) {
+    const item = document.createElement("div");
+    item.className = "gp-item";
+    const left = document.createElement("div");
+    const title = document.createElement("strong");
+    title.textContent = song.name;
+    const meta = document.createElement("span");
+    meta.textContent = song.bpm ? `目标 ${song.bpm} BPM` : "";
+    left.append(title, meta);
+
+    const actions = document.createElement("div");
+    actions.className = "row-actions";
+
+    const use = document.createElement("button");
+    use.type = "button";
+    use.dataset.action = "use-song";
+    use.dataset.id = song.id;
+    use.textContent = "使用";
+
+    const edit = document.createElement("button");
+    edit.type = "button";
+    edit.dataset.action = "edit-song";
+    edit.dataset.id = song.id;
+    edit.textContent = "编辑";
+
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "danger";
+    remove.dataset.action = "delete-song";
+    remove.dataset.id = song.id;
+    remove.textContent = "删除";
+
+    actions.append(use, edit, remove);
+    item.append(left, actions);
+    songLibraryList.append(item);
+  }
+}
+
+function upsertSong(event) {
+  event.preventDefault();
+  const payload = {
+    id: songId.value || createId(),
+    name: songNameInput.value.trim(),
+    bpm: songBpmInput.value ? Number(songBpmInput.value) : undefined,
+  };
+  if (!payload.name) return;
+  const index = songLibrary.findIndex((s) => s.id === payload.id);
+  if (index >= 0) songLibrary[index] = payload;
+  else songLibrary.unshift(payload);
+  saveItems(SONGS_STORAGE_KEY, songLibrary);
+  renderSongLibrary();
+  resetSongForm();
+}
+
+function resetSongForm() {
+  songLibraryForm.reset();
+  songId.value = "";
+  songSaveButton.textContent = "保存曲目";
+  songCancelButton.hidden = true;
+}
+
+function editSong(id) {
+  const song = songLibrary.find((s) => s.id === id);
+  if (!song) return;
+  songId.value = song.id;
+  songNameInput.value = song.name;
+  songBpmInput.value = song.bpm || 120;
+  songSaveButton.textContent = "更新曲目";
+  songCancelButton.hidden = false;
+  songNameInput.focus();
+}
+
+function deleteSong(id) {
+  songLibrary = songLibrary.filter((s) => s.id !== id);
+  saveItems(SONGS_STORAGE_KEY, songLibrary);
+  renderSongLibrary();
 }
 
 function renderSongPresets() {
@@ -576,6 +687,26 @@ gpList.addEventListener("click", (event) => {
   if (button.dataset.action === "delete-gp") deleteGpLink(button.dataset.id);
 });
 
+// Song library events
+songLibraryForm.addEventListener("submit", upsertSong);
+songCancelButton.addEventListener("click", resetSongForm);
+songLibraryList.addEventListener("click", (event) => {
+  const button = event.target.closest("button[data-action]");
+  if (!button) return;
+  if (button.dataset.action === "use-song") {
+    const s = songLibrary.find((x) => x.id === button.dataset.id);
+    if (s) {
+      setSong(s.name);
+      if (s.bpm) bpmInput.value = s.bpm;
+      window.location.hash = "#practiceForm";
+      songNameInput.blur();
+    }
+  }
+  if (button.dataset.action === "edit-song") editSong(button.dataset.id);
+  if (button.dataset.action === "delete-song") deleteSong(button.dataset.id);
+});
+
 setDefaultDate();
 renderRecords();
 renderGpLinks();
+renderSongLibrary();
